@@ -37,6 +37,7 @@ namespace project
         static void Main()
         {
             seedTasks();
+
             using (Projectcontext context = new())
             {
                 var tasks = context.Tasks.Include(task => task.Todos);
@@ -50,6 +51,8 @@ namespace project
 
                 }
             }
+
+            printIncompleteTasksAndTodos();
         }
 
         static void seedTasks()
@@ -80,6 +83,32 @@ namespace project
             }
             });
             db.SaveChanges();
+        }
+        static void printIncompleteTasksAndTodos()
+        {
+            Console.WriteLine("PRINTING INCOMPLETE TASKS");
+            Console.WriteLine(" ");
+            using (Projectcontext context = new())
+            {
+
+                var tasks = context.Tasks
+                    .Include(task => task.Todos)
+                    .Where(task => task.Todos.Any(task => task.IsComplete == false));
+
+                foreach (var task in tasks)
+                {
+                    Console.WriteLine($"Task: { task.Name}");
+                    foreach (var todo in task.Todos)
+                    {
+                        Console.WriteLine($"- {todo.Name}");
+                    }
+
+                }
+
+            }
+            Console.WriteLine(" ");
+            Console.WriteLine("DONE PRINTING INCOMPLETE TASKS");
+
         }
     }
 }
