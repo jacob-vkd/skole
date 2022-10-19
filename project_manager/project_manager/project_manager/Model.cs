@@ -28,7 +28,8 @@ public class Projectcontext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // configures one-to-many relationship
+        
+
         modelBuilder.Entity<WorkerTeam>()
                     .HasKey(o => new { o.TeamId, o.WorkerId });
     }
@@ -71,8 +72,8 @@ public class WorkerTeam
 {
     public int WorkerTeamId { get; set; }
     public int WorkerId { get; set; }
-    public Worker? Workers { get; set; }
+    public Worker? Worker { get; set; }
     public int TeamId { get; set; }
-    public Team? Teams { get; set; }
+    public Team? Team { get; set; }
 
 }

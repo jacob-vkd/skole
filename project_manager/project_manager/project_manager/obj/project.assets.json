@@ -1175,11 +1175,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Jacob\\Desktop\\project_manager\\project_manager\\project_manager\\project_manager.csproj",
+      "projectUniqueName": "C:\\Users\\Jacob\\Documents\\Development\\Skole\\skole\\project_manager\\project_manager\\project_manager\\project_manager.csproj",
       "projectName": "project_manager",
-      "projectPath": "C:\\Users\\Jacob\\Desktop\\project_manager\\project_manager\\project_manager\\project_manager.csproj",
+      "projectPath": "C:\\Users\\Jacob\\Documents\\Development\\Skole\\skole\\project_manager\\project_manager\\project_manager\\project_manager.csproj",
       "packagesPath": "C:\\Users\\Jacob\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Jacob\\Desktop\\project_manager\\project_manager\\project_manager\\obj\\",
+      "outputPath": "C:\\Users\\Jacob\\Documents\\Development\\Skole\\skole\\project_manager\\project_manager\\project_manager\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Jacob\\AppData\\Roaming\\NuGet\\NuGet.Config",
