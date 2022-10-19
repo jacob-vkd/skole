@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\EFGetStarted"
+    "\\project_manager",
+    "\\project_manager\\project_manager"
   ],
-  "SelectedNode": "\\EFGetStarted\\Model.cs",
+  "SelectedNode": "\\project_manager\\project_manager.sln",
   "PreviewInSolutionExplorer": false
 }
