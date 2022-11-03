@@ -26,7 +26,12 @@ namespace project_manager.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("TeamId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("TaskId");
+
+                    b.HasIndex("TeamId");
 
                     b.ToTable("Tasks");
                 });
@@ -37,11 +42,16 @@ namespace project_manager.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("CurrentTaskTaskId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("TeamId");
+
+                    b.HasIndex("CurrentTaskTaskId");
 
                     b.ToTable("Teams");
                 });
@@ -77,9 +87,14 @@ namespace project_manager.Migrations
                     b.Property<int?>("TaskId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("WorkerId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("TodoId");
 
                     b.HasIndex("TaskId");
+
+                    b.HasIndex("WorkerId");
 
                     b.ToTable("Todos");
                 });
@@ -90,11 +105,16 @@ namespace project_manager.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("CurrentTodoTodoId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("WorkerId");
+
+                    b.HasIndex("CurrentTodoTodoId");
 
                     b.ToTable("Workers");
                 });
@@ -117,6 +137,22 @@ namespace project_manager.Migrations
                     b.ToTable("WorkerTeams");
                 });
 
+            modelBuilder.Entity("Task", b =>
+                {
+                    b.HasOne("Team", null)
+                        .WithMany("Tasks")
+                        .HasForeignKey("TeamId");
+                });
+
+            modelBuilder.Entity("Team", b =>
+                {
+                    b.HasOne("Task", "CurrentTask")
+                        .WithMany()
+                        .HasForeignKey("CurrentTaskTaskId");
+
+                    b.Navigation("CurrentTask");
+                });
+
             modelBuilder.Entity("TeamWorker", b =>
                 {
                     b.HasOne("Team", null)
@@ -137,28 +173,51 @@ namespace project_manager.Migrations
                     b.HasOne("Task", null)
                         .WithMany("Todos")
                         .HasForeignKey("TaskId");
+
+                    b.HasOne("Worker", null)
+                        .WithMany("Todos")
+                        .HasForeignKey("WorkerId");
+                });
+
+            modelBuilder.Entity("Worker", b =>
+                {
+                    b.HasOne("Todo", "CurrentTodo")
+                        .WithMany()
+                        .HasForeignKey("CurrentTodoTodoId");
+
+                    b.Navigation("CurrentTodo");
                 });
 
             modelBuilder.Entity("WorkerTeam", b =>
                 {
-                    b.HasOne("Team", "Teams")
+                    b.HasOne("Team", "Team")
                         .WithMany()
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Worker", "Workers")
+                    b.HasOne("Worker", "Worker")
                         .WithMany()
                         .HasForeignKey("WorkerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Teams");
+                    b.Navigation("Team");
 
-                    b.Navigation("Workers");
+                    b.Navigation("Worker");
                 });
 
             modelBuilder.Entity("Task", b =>
+                {
+                    b.Navigation("Todos");
+                });
+
+            modelBuilder.Entity("Team", b =>
+                {
+                    b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("Worker", b =>
                 {
                     b.Navigation("Todos");
                 });

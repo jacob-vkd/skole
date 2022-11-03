@@ -57,6 +57,9 @@ public class Team
     public int TeamId { get; set; }
     public string Name { get; set; }
     public List<Worker>? Workers { get; set; }
+    public Task? CurrentTask { get; set; }
+    public List<Task> Tasks { get; set; }
+
 
 }
 
@@ -65,6 +68,8 @@ public class Worker
     public int WorkerId { get; set; }
     public string Name { get; set; }
     public List<Team> Teams { get; set; }
+    public Todo? CurrentTodo { get; set; }
+    public List <Todo>? Todos { get; set; }
 
 }
 
