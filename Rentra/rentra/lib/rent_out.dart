@@ -49,31 +49,26 @@ class _RentOutPageState extends State<RentOutPage> {
     fetchCategories();
   }
 
-Future<void> fetchCategories() async {
-  final response = await http.get(Uri.parse('$apiUrl/product/categories/'));
+  Future<void> fetchCategories() async {
+    final response = await http.get(Uri.parse('$apiUrl/product/categories/'));
 
-  print(response.statusCode);
-  print('$apiUrl/product/categories/');
-  
-  if (response.statusCode == 200) {
-    final Map<String, dynamic> responseData = json.decode(response.body);
-    print(responseData);
-    // Assuming 'categories' is the key containing the list of categories
-    final List<dynamic> categoryData = responseData['categories'];
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseData = json.decode(response.body);
+      // Assuming 'categories' is the key containing the list of categories
+      final List<dynamic> categoryData = responseData['categories'];
 
-    print(categoryData);
-    List<String> categoryList = [for (var category in categoryData) category['name'] as String];
-    print(categoryList);
-    setState(() {
-      _categories = categoryList;
-      _selectedCategory = _categories.isNotEmpty ? _categories[0] : '';
-    });
-  } else {
-    // Handle error
-    print('Failed to load categories');
+      List<String> categoryList = [
+        for (var category in categoryData) category['name'] as String
+      ];
+      setState(() {
+        _categories = categoryList;
+        _selectedCategory = _categories.isNotEmpty ? _categories[0] : '';
+      });
+    } else {
+      // Handle error
+      print('Failed to load categories');
+    }
   }
-}
-
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -117,7 +112,7 @@ Future<void> fetchCategories() async {
                 },
                 // Add any validation you need
               ),
-               DropdownButtonFormField<String>(
+              DropdownButtonFormField<String>(
                 value: _selectedCategory, // Use the selected category
                 items: _categories.map((String category) {
                   return DropdownMenuItem<String>(
@@ -128,7 +123,8 @@ Future<void> fetchCategories() async {
                 onChanged: (String? value) {
                   setState(() {
                     _selectedCategory = value ?? '';
-                    _newProduct.category = _selectedCategory; // Update the selected category
+                    _newProduct.category =
+                        _selectedCategory; // Update the selected category
                   });
                 },
                 decoration: const InputDecoration(labelText: 'Category'),
@@ -151,22 +147,23 @@ Future<void> fetchCategories() async {
                 },
                 // Add any validation you need
               ),
-            _image == null
-            ? Text('No image selected.')
-                : Image.file(
-                    _image!,
-                    height: 200.0,
-                  ),
-            SizedBox(height: 20.0),
-            ElevatedButton(
-              onPressed: _pickImage,
-              child: Text('Pick Image'),
-            ),
+              _image == null
+                  ? Text('No image selected.')
+                  : Image.file(
+                      _image!,
+                      height: 200.0,
+                    ),
+              SizedBox(height: 20.0),
+              ElevatedButton(
+                onPressed: _pickImage,
+                child: Text('Pick Image'),
+              ),
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     // If the form is valid, submit the product
-                    _submitProduct();
+                    getUser();
+                    // _submitProduct();
                   }
                 },
                 child: const Text('Submit'),
@@ -180,8 +177,8 @@ Future<void> fetchCategories() async {
 
   Future<void> _submitProduct() async {
     // Handle submitting the product data.
-    print('New Productasdasdasd');
-    print('${_newProduct.name} ${_newProduct.description} ${_newProduct.category}, ${_newProduct.price}, ${_newProduct.priceType}');
+    print(
+        '${_newProduct.name} ${_newProduct.description} ${_newProduct.category}, ${_newProduct.price}, ${_newProduct.priceType}');
 
     var category = int.tryParse(_newProduct.category);
     final response = await http.post(
@@ -200,17 +197,44 @@ Future<void> fetchCategories() async {
     if (response.statusCode < 300) {
       // Navigate to the Home Screen
       ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-      content: Text('Your item has been listed'),
-      ),
+        const SnackBar(
+          content: Text('Your item has been listed'),
+        ),
       );
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const HomeScreen()),);
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
     } else {
       // Handle product creation error
       print('Create product failed with code: ${response.statusCode}');
     }
   }
 
-
+  Future<void> getUser() async {
+    print(context);
+    final csrfToken = await getCsrfToken(apiUrl);
+    final response = await http.get(
+      Uri.parse('$apiUrl/user/'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken,
+      },
+    );
+    if (response.statusCode < 300) {
+      // Navigate to the Home Screen
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(response.body),
+        ),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    } else {
+      // Handle product creation error
+      print('Get user failed with code: ${response.statusCode}');
+    }
+  }
 }
-

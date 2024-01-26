@@ -13,7 +13,7 @@ from django.middleware.csrf import get_token
 from django.views.decorators.csrf import csrf_exempt
 import json
 
-@csrf_exempt  # Ignore CSRF protection for this view
+@csrf_exempt
 def get_csrf_token(request):
     csrf_token = get_token(request)
     return JsonResponse({'csrf_token': csrf_token})
@@ -39,7 +39,6 @@ class ProductCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@csrf_exempt
 def user_login(request):
     if request.method == 'POST':
         data = json.loads(request.body.decode('utf-8'))
@@ -65,12 +64,10 @@ def user_login(request):
 
     return JsonResponse({'message': 'Bad Request: Invalid login data'}, status=400)
 
-@csrf_exempt
 def logout_user(request):
         logout(request)
         return JsonResponse({'message': 'Logout successful'})
     
-@csrf_exempt
 def get_current_user(request):
     # Check if the user is authenticated
     if request.user.is_authenticated:
@@ -90,7 +87,6 @@ def get_current_user(request):
         }
     return JsonResponse(response_data)
 
-@csrf_exempt
 def categories(request):
     if request.method == 'GET':
         categories = Category.objects.all()
