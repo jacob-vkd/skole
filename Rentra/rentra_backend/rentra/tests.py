@@ -9,8 +9,8 @@ class TestProduct(TestCase):
         Product.objects.create(name='Test Product 2', description='test Desc', category_id=cat, price_type='hourly', price=100)
 
     def test_Product_name(self):
-        Product1 = Product.objects.get(title='Test Product 1')
-        Product2 = Product.objects.get(title='Test Product 2')
+        Product1 = Product.objects.get(name='Test Product 1')
+        Product2 = Product.objects.get(name='Test Product 2')
         self.assertEqual(Product1.name, 'Test Product 1')
         self.assertEqual(Product2.name, 'Test Product 2')
 
