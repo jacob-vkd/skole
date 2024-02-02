@@ -27,4 +27,4 @@ jobs:
         pip install -r Rentra/rentra_backend/requirements.txt
     - name: Run Tests
       run: |
-        python Rentra/rentra_backend/manage.py test
+        python Rentra/rentra_backend/manage.py Rentra/rentra_backend/rentra/tests.py
