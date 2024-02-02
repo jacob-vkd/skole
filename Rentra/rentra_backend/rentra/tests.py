@@ -4,7 +4,7 @@ from .models import Product, Category
 class TestProduct(TestCase):
 
     def setUp(self):
-        cat = Category.objects.create(name='Test Category 1', completed=False)
+        cat = Category.objects.create(name='Test Category 1')
         Product.objects.create(name='Test Product 1', description='test Desc', category_id=cat.id, price_type='hourly', price=100)
         Product.objects.create(name='Test Product 2', description='test Desc', category_id=cat.id, price_type='hourly', price=100)
 
