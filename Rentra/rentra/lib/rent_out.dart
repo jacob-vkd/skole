@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'main.dart';
 import 'home.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:http_parser/http_parser.dart';
 
 class Product {
   String name;
@@ -12,6 +14,7 @@ class Product {
   String category;
   String priceType;
   double price;
+  int userId;
 
   Product({
     required this.name,
@@ -19,6 +22,7 @@ class Product {
     required this.category,
     required this.priceType,
     required this.price,
+    required this.userId,
   });
 }
 
@@ -33,7 +37,7 @@ class _RentOutPageState extends State<RentOutPage> {
   final _formKey = GlobalKey<FormState>();
   late Product _newProduct;
   File? _image;
-  List<String> _categories = [];
+  List<Map<String, dynamic>> _categories = [];
   String _selectedCategory = '';
 
   @override
@@ -45,28 +49,38 @@ class _RentOutPageState extends State<RentOutPage> {
       category: '',
       priceType: '',
       price: 0.0,
+      userId: 0,
     );
     fetchCategories();
   }
 
   Future<void> fetchCategories() async {
-    final response = await http.get(Uri.parse('$apiUrl/product/categories/'));
+    try {
+      final response =
+          await http.get(Uri.parse('$apiUrl/product/categories/'));
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> responseData = json.decode(response.body);
-      // Assuming 'categories' is the key containing the list of categories
-      final List<dynamic> categoryData = responseData['categories'];
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData =
+            json.decode(response.body);
+        final List<dynamic> categoryData = responseData['categories'];
 
-      List<String> categoryList = [
-        for (var category in categoryData) category['name'] as String
-      ];
-      setState(() {
-        _categories = categoryList;
-        _selectedCategory = _categories.isNotEmpty ? _categories[0] : '';
-      });
-    } else {
-      // Handle error
-      print('Failed to load categories');
+        List<Map<String, dynamic>> categoryList = [
+          for (var category in categoryData)
+            {'id': category['id'], 'name': category['name'] as String}
+        ];
+        print('CAT LIST ************************');
+        print(categoryList);
+        setState(() {
+          _categories = categoryList;
+          _selectedCategory =
+              _categories.isNotEmpty ? _categories[0]['name'] : '';
+          _newProduct.category = _selectedCategory;
+        });
+      } else {
+        print('Failed to load categories');
+      }
+    } catch (error) {
+      print('Error fetching categories: $error');
     }
   }
 
@@ -80,6 +94,7 @@ class _RentOutPageState extends State<RentOutPage> {
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -112,23 +127,22 @@ class _RentOutPageState extends State<RentOutPage> {
                 },
                 // Add any validation you need
               ),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory, // Use the selected category
-                items: _categories.map((String category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (String? value) {
-                  setState(() {
-                    _selectedCategory = value ?? '';
-                    _newProduct.category =
-                        _selectedCategory; // Update the selected category
-                  });
-                },
-                decoration: const InputDecoration(labelText: 'Category'),
-              ),
+                DropdownButtonFormField<String>(
+                  value: _selectedCategory,
+                  items: _categories.map((category) {
+                    return DropdownMenuItem<String>(
+                      value: category['name'],
+                      child: Text(category['name']),
+                    );
+                  }).toList(),
+                  onChanged: (String? value) {
+                    setState(() {
+                      _selectedCategory = value ?? '';
+                      _newProduct.category = _selectedCategory;
+                    });
+                  },
+                  decoration: const InputDecoration(labelText: 'Category'),
+                ),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Price Type'),
                 onChanged: (value) {
@@ -162,8 +176,7 @@ class _RentOutPageState extends State<RentOutPage> {
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     // If the form is valid, submit the product
-                    getUser();
-                    // _submitProduct();
+                    _submitProduct();
                   }
                 },
                 child: const Text('Submit'),
@@ -175,33 +188,69 @@ class _RentOutPageState extends State<RentOutPage> {
     );
   }
 
-  Future<void> _submitProduct() async {
+Future<void> _submitProduct() async {
+  final prefs = await SharedPreferences.getInstance();
+  String? token;
+  int? userId;
+  if (prefs.containsKey('userToken')) {
+    token = prefs.getString('userToken')!;
+  } else {
+    throw Exception('User is not authenticated');
+  }
+  if (prefs.containsKey('userId')) {
+    userId = prefs.getInt('userId')!;
+  }
+  try {
     // Handle submitting the product data.
-    print(
-        '${_newProduct.name} ${_newProduct.description} ${_newProduct.category}, ${_newProduct.price}, ${_newProduct.priceType}');
+    final categoryId = await getCatId(_newProduct.category);
 
-    var category = int.tryParse(_newProduct.category);
-    final response = await http.post(
+    // Create a multipart request
+    var request = http.MultipartRequest(
+      'POST',
       Uri.parse('$apiUrl/product/create/'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({
-        'name': _newProduct.name,
-        'description': _newProduct.description,
-        'category_id': category,
-        'price_type': _newProduct.priceType,
-        'price': _newProduct.price
-      }),
     );
+
+    // Set headers
+    request.headers['Authenticate'] = 'Token $token';
+
+    // Create a map for fields
+var fieldsMap = {
+  'name': _newProduct.name,
+  'description': _newProduct.description,
+  'category_id': categoryId.toString(), // Convert to String
+  'price_type': _newProduct.priceType,
+  'price': _newProduct.price.toString(), // Convert to String
+  // 'image': _newProduct.image,
+  'user_id': userId.toString(), // Convert to String
+    };
+    var stringFieldsMap = Map<String, String>.from(fieldsMap);
+
+    // Add fields to the request
+    request.fields.addAll(stringFieldsMap);
+
+    // Add the image file to the request
+    if (_image != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          _image!.path,
+          contentType: MediaType('image', 'png'), // Adjust the content type as needed
+        ),
+      );
+    }
+
+    // Send the request
+    var response = await request.send();
+
+    // Check the response status
     if (response.statusCode < 300) {
-      // Navigate to the Home Screen
+      // Successfully uploaded
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Your item has been listed'),
         ),
       );
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
@@ -209,32 +258,34 @@ class _RentOutPageState extends State<RentOutPage> {
       // Handle product creation error
       print('Create product failed with code: ${response.statusCode}');
     }
+  } catch (error) {
+    // Handle exceptions
+    print('Error during product submission: $error');
+  }
+}
+
+
+
+Future<int> getCatId(String catString) async {
+  final prefs = await SharedPreferences.getInstance();
+  String? token;
+  if (prefs.containsKey('userToken')) {
+    token = prefs.getString('userToken')!;
+  } else {
+    throw Exception('User is not authenticated');
   }
 
-  Future<void> getUser() async {
-    print(context);
-    final csrfToken = await getCsrfToken(apiUrl);
-    final response = await http.get(
-      Uri.parse('$apiUrl/user/'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken,
-      },
-    );
-    if (response.statusCode < 300) {
-      // Navigate to the Home Screen
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response.body),
-        ),
-      );
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    } else {
-      // Handle product creation error
-      print('Get user failed with code: ${response.statusCode}');
-    }
-  }
+  final response = await http.post(
+    Uri.parse('$apiUrl/product/categories/'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authenticate': 'Token ${token}',
+    },
+    body: json.encode({
+      'name': catString,
+    }),
+  );
+  final Map<String, dynamic> responseBody = json.decode(response.body);
+  return responseBody['category_id'];
+}
 }

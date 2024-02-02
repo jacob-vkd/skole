@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'home.dart';
 
 const String apiUrl = 'http://127.0.0.1:8000/api';
+dynamic globaluser;
 
 void main() => runApp(const MyApp());
 
@@ -22,17 +26,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-Future<String> getCsrfToken(String apiUrl) async {
-  final response = await http.get(Uri.parse('$apiUrl/csrf_token/'));
-  
-  if (response.statusCode == 200) {
-    final Map<String, dynamic> data = json.decode(response.body);
-    return data['csrf_token'];
-  } else {
-    throw Exception('Failed to fetch CSRF token');
-  }
-}
-
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
 
@@ -48,36 +41,33 @@ Future<void> login({bool create_account=false}) async {
   try {
     String username = _emailController.text;
     String password = _passwordController.text;
-    
-    print(username);
-    print(password);
-    print(create_account);
-
-    final csrfToken = await getCsrfToken(apiUrl);
-    print(csrfToken);
+    final pref = await SharedPreferences.getInstance();
+    String? token ='';
+    if (pref.containsKey('userToken')) {
+      token = pref.getString('userToken')!;
+    }
     final response = await http.post(
       Uri.parse('$apiUrl/login/'),
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken,
       },
       body: json.encode({
         'username': username,
         'password': password,
-        'createaccount': create_account,
+        'createAccount': create_account,
       }),
     );
-
+    // print('Response body: ${response.body}');
+    final Map<String, dynamic> responseBody = json.decode(response.body);
     if (response.statusCode == 200) {
-      // Navigate to the Home Screen
+      pref.setString('userToken', responseBody['token']);
+      int? userId = responseBody['user']['id'];
+      pref.setInt('userId', userId!);
       Navigator.push(context, MaterialPageRoute(builder: (context) => const HomeScreen()),);
       print('Login successful');
     } else {
       // Handle login error
       print('Login failed with status: ${response.statusCode}');
-      // Parse the response body into a Map
-      final Map<String, dynamic> responseBody = json.decode(response.body);
-
       // Access the 'message' key
       final errorMessage = responseBody['message'];
       ScaffoldMessenger.of(context).showSnackBar(
@@ -93,17 +83,18 @@ Future<void> login({bool create_account=false}) async {
 }
 
 static Future<void> logout(BuildContext context) async {
+  final pref = await SharedPreferences.getInstance();
+  String? token ='';
+  if (pref.containsKey('userToken')) {
+      token = pref.getString('userToken')!;
+    }
   try {
-    final csrfToken = await getCsrfToken(apiUrl);
-    print('TOKEN HERE');
-    print(csrfToken);
     final response = await http.post(
       Uri.parse('$apiUrl/logout/'),
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken,
+        'Authenticate': "Token $token"
       },
-      // Omit the request body for logout, as it's typically not required
     );
 
     if (response.statusCode == 200) {
@@ -121,6 +112,18 @@ static Future<void> logout(BuildContext context) async {
     print('Error during logout: $error');
   }
 }
+
+static Future<String> getTokenFromPref() async {
+  final prefs = await SharedPreferences.getInstance();
+  String token = '';
+  if (prefs.containsKey('userToken')) {
+    token = prefs.getString('userToken')!;
+    } 
+  else {
+    throw Exception('User is not authenticated');
+    }
+  return token;
+  }
 
   @override
   Widget build(BuildContext context) {

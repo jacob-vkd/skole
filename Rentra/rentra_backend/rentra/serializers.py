@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Product
+from .models import Product, Category
 
 User = get_user_model()
 
@@ -23,8 +23,15 @@ class RegistrationSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
-    
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']     
+
 class ProductSerializer(serializers.ModelSerializer):
+    category_id = CategorySerializer()
     class Meta:
         model = Product
-        fields = ['name', 'description', 'category_id', 'price_type', 'price']
+        fields = ['name', 'description', 'category_id', 'price_type', 'price', 'image']
+

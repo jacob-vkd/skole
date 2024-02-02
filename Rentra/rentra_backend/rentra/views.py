@@ -1,26 +1,26 @@
 from django.db import IntegrityError
 from rest_framework import generics, status
-from rest_framework.permissions import AllowAny
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Category
-from .serializers import ProductSerializer
-from .serializers import UserSerializer, RegistrationSerializer
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.authtoken.models import Token
+from .models import Category, Product
+from .serializers import UserSerializer, RegistrationSerializer, ProductSerializer
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.middleware.csrf import get_token
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.shortcuts import get_object_or_404
 import json
 
-@csrf_exempt
+USER = False
+
 def get_csrf_token(request):
     csrf_token = get_token(request)
-    return JsonResponse({'csrf_token': csrf_token})
-
-class RegistrationView(generics.CreateAPIView):
-    serializer_class = RegistrationSerializer
-    permission_classes = (AllowAny,)
+    return csrf_token
 
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
@@ -28,6 +28,7 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_object(self):
         return self.request.user
 
+@authentication_classes([SessionAuthentication, TokenAuthentication])
 class ProductCreateView(APIView):
     def post(self, request, format=None):
         print(request.data)
@@ -38,57 +39,52 @@ class ProductCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['GET'])
+def product(request):
+    products = Product.objects.all()
+    serializer = ProductSerializer(products, many=True)
+    print(serializer.data)
+    return Response(serializer.data)
+    
+@api_view(['POST'])
+def create_user(request):
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        user = User.objects.get(username=request.data['username'])
+        user.set_password(request.data['password'])
+        user.save()
+        token = Token.objects.create(user=user)
+        return Response({'token': token.key, 'user': serializer.data})
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST'])
 def user_login(request):
-    if request.method == 'POST':
-        data = json.loads(request.body.decode('utf-8'))
-        username = data.get("username")
-        password = data.get("password")
-        create_account = data.get("createaccount")
+    user = get_object_or_404(User, username=request.data['username'])
+    if user.check_password(request.data['password']) == False:
+        return Response({"detail": "Not Found",'token': ''}, status=status.HTTP_400_BAD_REQUEST)
+    token, created = Token.objects.get_or_create(user=user)
+    serializer = UserSerializer(instance=user)
+    return Response({'token': token.key, 'user': serializer.data})
 
-        if create_account and username is not None and password is not None:
-            try:
-                # Check if the user already exists
-                if User.objects.filter(username=username).exists():
-                    return JsonResponse({'message': 'Username already exists'}, status=400)
-
-                user = User.objects.create_user(username=username, password=password)
-                return JsonResponse({'message': 'User created successfully', 'username': user.username}, status=200)
-            except IntegrityError as e:
-                return JsonResponse({'message': 'Error creating user. Username might already exist.'}, status=400)
-        else:
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return JsonResponse({'message': 'Login successful', 'username': user.username}, status=200)
-
-    return JsonResponse({'message': 'Bad Request: Invalid login data'}, status=400)
-
+@api_view(['POST'])
 def logout_user(request):
         logout(request)
-        return JsonResponse({'message': 'Logout successful'})
-    
-def get_current_user(request):
-    # Check if the user is authenticated
-    if request.user.is_authenticated:
-        # Access user information
-        username = request.user.username
-        email = request.user.email
-        # You can use this information to customize the response
-        response_data = {
-            'username': username,
-            'email': email,
-            'message': 'User is authenticated',
-        }
-    else:
-        # User is not authenticated
-        response_data = {
-            'message': 'User is not authenticated',
-        }
-    return JsonResponse(response_data)
+        return Response({'message': 'Logout successful'})
 
+@api_view(['GET', 'POST'])
 def categories(request):
     if request.method == 'GET':
         categories = Category.objects.all()
         category_list = [{'id': category.id, 'name': category.name} for category in categories]
         return JsonResponse({'categories': category_list})
+    if request.method == 'POST':
+        category = Category.objects.get(name=request.data['name'])
+        return Response({'category_id': category.id})
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated]) 
+def test_token(request):
+    return Response({'message': f"Token test successful"})

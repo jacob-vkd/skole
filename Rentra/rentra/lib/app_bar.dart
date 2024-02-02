@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'main.dart';
 import 'rent_out.dart';
+import 'item_overview.dart';
 
 class RentraAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -43,7 +44,11 @@ class CommonDrawer extends StatelessWidget {
             ListTile(
               title: const Text('Rent an Item'),
               onTap: () {
-                Navigator.pop(context);
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ProductList()),
+                  );
+                // Navigator.pop(context);
               },
             ), 
             ListTile(
