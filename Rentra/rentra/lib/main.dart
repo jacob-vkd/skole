@@ -37,15 +37,11 @@ class LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-Future<void> login({bool create_account=false}) async {
+Future<void> login() async {
   try {
     String username = _emailController.text;
     String password = _passwordController.text;
     final pref = await SharedPreferences.getInstance();
-    String? token ='';
-    if (pref.containsKey('userToken')) {
-      token = pref.getString('userToken')!;
-    }
     final response = await http.post(
       Uri.parse('$apiUrl/login/'),
       headers: {
@@ -54,7 +50,6 @@ Future<void> login({bool create_account=false}) async {
       body: json.encode({
         'username': username,
         'password': password,
-        'createAccount': create_account,
       }),
     );
     // print('Response body: ${response.body}');
@@ -79,6 +74,46 @@ Future<void> login({bool create_account=false}) async {
   } catch (error) {
     // Handle exceptions
     print('Error during login: $error');
+  }
+}
+
+Future<void> createUser() async {
+  try {
+    String username = _emailController.text;
+    String password = _passwordController.text;
+    final pref = await SharedPreferences.getInstance();
+    final response = await http.post(
+      Uri.parse('$apiUrl/login/create_user'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'username': username,
+        'password': password,
+      }),
+    );
+    // print('Response body: ${response.body}');
+    final Map<String, dynamic> responseBody = json.decode(response.body);
+    if (response.statusCode == 200) {
+      pref.setString('userToken', responseBody['token']);
+      int? userId = responseBody['user']['id'];
+      pref.setInt('userId', userId!);
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const HomeScreen()),);
+      print('Create account successful');
+    } else {
+      // Handle login error
+      print('Create account failed with status: ${response.statusCode}');
+      // Access the 'message' key
+      final errorMessage = responseBody['message'];
+      ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+      content: Text(errorMessage),
+      ),
+      );
+    }
+  } catch (error) {
+    // Handle exceptions
+    print('Error during create account: $error');
   }
 }
 
@@ -172,7 +207,7 @@ static Future<String> getTokenFromPref() async {
               child: const Text('Login'),
             ),
             ElevatedButton(
-              onPressed: () => login(create_account: true),
+              onPressed: () => createUser(),
               child: const Text('Create Account'),
             ),
           ],

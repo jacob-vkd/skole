@@ -1,4 +1,3 @@
-from django.db import IntegrityError
 from rest_framework import generics, status
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -7,14 +6,12 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.authtoken.models import Token
 from .models import Category, Product
-from .serializers import UserSerializer, RegistrationSerializer, ProductSerializer
+from .serializers import UserSerializer, ProductSerializer
 from django.http import JsonResponse
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import logout
 from django.middleware.csrf import get_token
-from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.shortcuts import get_object_or_404
-import json
 
 USER = False
 
@@ -61,17 +58,20 @@ def create_user(request):
 
 @api_view(['POST'])
 def user_login(request):
-    user = get_object_or_404(User, username=request.data['username'])
+    try:
+        user = get_object_or_404(User, username=request.data['username'])
+    except Exception as e:
+        return Response({"message": "Not Found",'token': ''}, status=status.HTTP_400_BAD_REQUEST)
     if user.check_password(request.data['password']) == False:
-        return Response({"detail": "Not Found",'token': ''}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": "Not Found",'token': ''}, status=status.HTTP_400_BAD_REQUEST)
     token, created = Token.objects.get_or_create(user=user)
     serializer = UserSerializer(instance=user)
-    return Response({'token': token.key, 'user': serializer.data})
+    return Response({"message": "Welcome", 'token': token.key, 'user': serializer.data})
 
 @api_view(['POST'])
 def logout_user(request):
-        logout(request)
-        return Response({'message': 'Logout successful'})
+    logout(request)
+    return Response({'message': 'Logout successful'})
 
 @api_view(['GET', 'POST'])
 def categories(request):
