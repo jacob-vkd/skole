@@ -1,10 +1,11 @@
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
 import 'main.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 
 class ProductList extends StatefulWidget {
@@ -20,7 +21,7 @@ class _ProductListState extends State<ProductList> {
   // Function to fetch products from the Django API
   Future<void> fetchProducts() async {
     var token = await LoginPageState.getTokenFromPref();
-    try {
+    // try {
       final response = await http.get(
       Uri.parse('$apiUrl/product/'),
       headers: {
@@ -33,17 +34,12 @@ class _ProductListState extends State<ProductList> {
         // Convert JSON data to Product objects
         List<Product> productList = productData.map((data) {
           print(data);
-          var category_name = '';
-          var category = data['category_id'];
-          if (category != null){
-            category_name = category['name'];
-          }
           return Product(
             data['name'],
             data['description'],
-            category_name,
+            data['category_id'].toString(),
             data['price_type'],
-            data['image'],
+            data['image'] ?? '/media/images/r.png',
             double.parse(data['price'].toString()),
           );
         }).toList();
@@ -54,9 +50,9 @@ class _ProductListState extends State<ProductList> {
       } else {
         print('Failed to fetch products: ${response.statusCode}');
       }
-    } catch (error) {
-      print('Error fetching products: $error');
-    }
+    // } catch (error) {
+    //   print('Error fetching products: $error');
+    // }
   }
 
   @override
@@ -65,19 +61,6 @@ class _ProductListState extends State<ProductList> {
     // Fetch products when the widget is initialized
     fetchProducts();
   }
-
-Future<Image> convertFileToImage(File? picture) async {
-  if (picture == null) {
-    // Handle the case where the image is null
-    // You might return a placeholder image or throw an error, depending on your requirements
-    throw Exception('Image is null');
-  }
-  List<int> imageBase64 = picture.readAsBytesSync();
-  String imageAsString = base64Encode(imageBase64);
-  Uint8List uint8list = base64.decode(imageAsString);
-  Image image = Image.memory(uint8list);
-  return image;
-}
 
 
   @override
@@ -89,22 +72,11 @@ Future<Image> convertFileToImage(File? picture) async {
       body: ListView.builder(
         itemCount: products.length,
         itemBuilder: (context, index) {
-          // var img = convertFileToImage(products[index].image);
-          return ListTile(
-            leading: FutureBuilder<Image>(
-            future: convertFileToImage(products[index].image),
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return CircleAvatar(
-                  backgroundImage: snapshot.data!.image,
-                  radius: 5.0,
-                );
-              } else {
-              // While the image is still loading, you can display a placeholder or a loading indicator
-              return CircularProgressIndicator();
-    }
-  },
-),
+        return ListTile(
+          leading: CircleAvatar(
+            backgroundImage: NetworkImage('http://127.0.0.1:8000/${products[index].image}'),
+            radius: 30.0,
+          ),
             title: Text(products[index].name),
             subtitle: Text(products[index].description),
             trailing: Text('\DKK${products[index].price.toStringAsFixed(2)} ${products[index].price_type}'),
@@ -125,7 +97,7 @@ class Product {
   final String description;
   final String category;
   final String price_type;
-  final File? image;
+  final String image;
   final double price;
 
   Product(this.name, this.description, this.category, this.price_type, this.image, this.price);

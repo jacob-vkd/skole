@@ -68,8 +68,6 @@ class _RentOutPageState extends State<RentOutPage> {
           for (var category in categoryData)
             {'id': category['id'], 'name': category['name'] as String}
         ];
-        print('CAT LIST ************************');
-        print(categoryList);
         setState(() {
           _categories = categoryList;
           _selectedCategory =
@@ -214,14 +212,13 @@ Future<void> _submitProduct() async {
     request.headers['Authenticate'] = 'Token $token';
 
     // Create a map for fields
-var fieldsMap = {
-  'name': _newProduct.name,
-  'description': _newProduct.description,
-  'category_id': categoryId.toString(), // Convert to String
-  'price_type': _newProduct.priceType,
-  'price': _newProduct.price.toString(), // Convert to String
-  // 'image': _newProduct.image,
-  'user_id': userId.toString(), // Convert to String
+    var fieldsMap = {
+      'name': _newProduct.name,
+      'description': _newProduct.description,
+      'category_id': categoryId.toString(), // Convert to String
+      'price_type': _newProduct.priceType,
+      'price': _newProduct.price.toString(), // Convert to String
+      'user_id': userId.toString(), // Convert to String
     };
     var stringFieldsMap = Map<String, String>.from(fieldsMap);
 

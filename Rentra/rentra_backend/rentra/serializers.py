@@ -24,14 +24,22 @@ class RegistrationSerializer(serializers.ModelSerializer):
         )
         return user
 
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ['id', 'name']     
 
 class ProductSerializer(serializers.ModelSerializer):
-    category_id = CategorySerializer()
+    category_id = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
     class Meta:
         model = Product
-        fields = ['name', 'description', 'category_id', 'price_type', 'price', 'image']
+        fields = ['name', 'description', 'category_id', 'price_type', 'price', 'user_id', 'image']
+
+    # def create(self, validated_data):
+    #     # Read the image data from validated data
+    #     image_data = validated_data.pop('image', None)
+    #     # Call the superclass's create method
+    #     instance = super().create(validated_data)
+    #     # If image data is provided, save it as binary to the instance
+    #     if image_data:
+    #         instance.image = image_data
+    #         instance.save()
+    #     return instance
+
 

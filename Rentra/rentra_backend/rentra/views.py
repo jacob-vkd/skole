@@ -1,4 +1,5 @@
 from rest_framework import generics, status
+from rest_framework.parsers import MultiPartParser
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -27,15 +28,19 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 class ProductCreateView(APIView):
+    parser_classes = [MultiPartParser]  # Use MultiPartParser to handle multipart/form-data requests
+    
     def post(self, request, format=None):
-        print(request.data)
         serializer = ProductSerializer(data=request.data)
-        print(serializer)
-        print(serializer.is_valid())
         if serializer.is_valid():
+            # If an image is included in the request, save its binary data
+            # image_data = request.data.get('image')
+            # if image_data:
+            #     serializer.validated_data['image'] = image_data.read()  # Read image data as binary
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 @api_view(['GET'])
 def product(request):
