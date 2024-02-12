@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'main.dart';
-import 'rent_out.dart';
-import 'item_overview.dart';
+import 'settings.dart';
+import 'product_create.dart';
+import 'product_overview.dart';
 
 class RentraAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -54,11 +55,10 @@ class CommonDrawer extends StatelessWidget {
             ListTile(
               title: const Text('Rent Out an Item'),
               onTap: () {
-                    Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => RentOutPage()),
-                  );
-                // Navigator.pop(context);
+                Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => RentOutPage()),
+              );
               },
             ),
             ListTile(
@@ -70,7 +70,10 @@ class CommonDrawer extends StatelessWidget {
             ListTile(
               title: const Text('Settings'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
               },
           ),
             ListTile(

@@ -21,7 +21,7 @@ class _ProductListState extends State<ProductList> {
   // Function to fetch products from the Django API
   Future<void> fetchProducts() async {
     var token = await LoginPageState.getTokenFromPref();
-    // try {
+    try {
       final response = await http.get(
       Uri.parse('$apiUrl/product/'),
       headers: {
@@ -50,9 +50,9 @@ class _ProductListState extends State<ProductList> {
       } else {
         print('Failed to fetch products: ${response.statusCode}');
       }
-    // } catch (error) {
-    //   print('Error fetching products: $error');
-    // }
+    } catch (error) {
+      print('Error fetching products: $error');
+    }
   }
 
   @override
