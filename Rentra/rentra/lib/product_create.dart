@@ -141,6 +141,22 @@ class _RentOutPageState extends State<RentOutPage> {
                   },
                   decoration: const InputDecoration(labelText: 'Category'),
                 ),
+                // DropdownButtonFormField<String>(
+                //   value: _selectedCategory,
+                //   items: _categories.map((category) {
+                //     return DropdownMenuItem<String>(
+                //       value: category['name'],
+                //       child: Text(category['name']),
+                //     );
+                //   }).toList(),
+                //   onChanged: (String? value) {
+                //     setState(() {
+                //       _selectedCategory = value ?? '';
+                //       _newProduct.category = _selectedCategory;
+                //     });
+                //   },
+                //   decoration: const InputDecoration(labelText: 'Category'),
+                // ),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Price Type'),
                 onChanged: (value) {
