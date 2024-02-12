@@ -30,7 +30,7 @@ class _ProductListState extends State<ProductList> {
       });
 
       if (response.statusCode < 300) {
-        final List<dynamic> productData = json.decode(response.body);
+        final List<dynamic> productData = json.decode(utf8.decode(response.bodyBytes));
         // Convert JSON data to Product objects
         List<Product> productList = productData.map((data) {
           print(data);
