@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.authtoken.models import Token
-from .models import Category, Product
-from .serializers import UserSerializer, ProductSerializer
+from .models import Category, Product, PriceType
+from .serializers import UserSerializer, ProductSerializer, PriceTypeSerializer
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import logout
@@ -46,7 +46,22 @@ class ProductCreateView(APIView):
 def product(request):
     products = Product.objects.all()
     serializer = ProductSerializer(products, many=True)
-    print(serializer.data)
+    return Response(serializer.data)
+
+@api_view(['POST'])
+def product_user(request):
+    # Filter products where user_id matches request.user_id
+    products = Product.objects.filter(user_id=request.data['user_id'])
+    products_renting = Product.objects.filter(rented_by_user_id=request.data['user_id'])
+    products_rented = products.filter(rented_by_user_id__isnull=False)
+    # Convert queryset to JSON
+    products_data = list(products.values())  # Convert queryset to list of dictionaries
+    return Response({'products': products_data, 'products_rented': products_rented, 'products_renting': products_renting})
+
+@api_view(['GET'])
+def pricetype(request):
+    pricetype = PriceType.objects.all()
+    serializer = PriceTypeSerializer(pricetype, many=True)
     return Response(serializer.data)
     
 @api_view(['POST'])
@@ -63,6 +78,7 @@ def create_user(request):
 
 @api_view(['POST'])
 def user_login(request):
+    print('TRYING TO LOG IN***********************')
     try:
         user = get_object_or_404(User, username=request.data['username'])
     except Exception as e:
@@ -89,7 +105,7 @@ def categories(request):
         return Response({'category_id': category.id})
 
 @api_view(['GET'])
-@authentication_classes([SessionAuthentication, TokenAuthentication])
+@authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated]) 
 def test_token(request):
     return Response({'message': f"Token test successful"})

@@ -40,7 +40,10 @@ INSTALLED_APPS = [
     'rentra',
     'rest_framework',
     'rest_framework.authtoken',
+    'corsheaders',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UserDetailView, ProductCreateView, create_user, product, create_user, test_token, categories, user_login, logout_user, get_csrf_token
+from .views import UserDetailView, ProductCreateView, product_user, pricetype, create_user, product, create_user, test_token, categories, user_login, logout_user, get_csrf_token
 
 urlpatterns = [
     path('register/', create_user, name='register'),
@@ -11,5 +11,7 @@ urlpatterns = [
     path('product/create/', ProductCreateView.as_view(), name='product-create'),
     path('product/categories/', categories, name='categories'),
     path('product/', product, name='Product'),
+    path('product/pricetype', pricetype, name='pricetpe'),
+    path('product/user', product_user),
     
 ]

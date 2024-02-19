@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({Key? key});
+  const SettingsPage({super.key});
 
   static const keyDarkMode = 'key-dark-mode';
 

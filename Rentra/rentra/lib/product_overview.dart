@@ -1,14 +1,13 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
 import 'main.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
+import 'custom_scaffold.dart';
 
 
 class ProductList extends StatefulWidget {
+  const ProductList({super.key});
+
   @override
   _ProductListState createState() => _ProductListState();
 }
@@ -23,7 +22,7 @@ class _ProductListState extends State<ProductList> {
     var token = await LoginPageState.getTokenFromPref();
     try {
       final response = await http.get(
-      Uri.parse('$apiUrl/product/'),
+      Uri.parse('$apiUrl/api/product/'),
       headers: {
         'Content-Type': 'application/json',
         'Authenticate': "Token $token"
@@ -62,24 +61,22 @@ class _ProductListState extends State<ProductList> {
     fetchProducts();
   }
 
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Available Products'),
-      ),
+    
+    return CustomScaffold(
+      appBarTitle: 'Available For Rent',
       body: ListView.builder(
         itemCount: products.length,
         itemBuilder: (context, index) {
         return ListTile(
           leading: CircleAvatar(
-            backgroundImage: NetworkImage('http://127.0.0.1:8000/${products[index].image}'),
+            backgroundImage: NetworkImage('$apiUrl/${products[index].image}'),
             radius: 30.0,
           ),
             title: Text(products[index].name),
             subtitle: Text(products[index].description),
-            trailing: Text('\DKK${products[index].price.toStringAsFixed(2)} ${products[index].price_type}'),
+            trailing: Text('DKK${products[index].price.toStringAsFixed(2)} ${products[index].price_type}'),
             onTap: () {
               // Handle product selection (navigate to details page, etc.)
               print('Selected product: ${products[index].name}');

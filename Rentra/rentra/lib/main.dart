@@ -1,12 +1,12 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home.dart';
+import 'custom_scaffold.dart';
 
-const String apiUrl = 'http://127.0.0.1:8000/api';
+
+const String apiUrl = 'http://127.0.0.1:8000';
 dynamic globaluser;
 
 void main() => runApp(const MyApp());
@@ -38,12 +38,13 @@ class LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
 
 Future<void> login() async {
+  print(apiUrl);
   try {
     String username = _emailController.text;
     String password = _passwordController.text;
     final pref = await SharedPreferences.getInstance();
     final response = await http.post(
-      Uri.parse('$apiUrl/login/'),
+      Uri.parse('$apiUrl/api/login/'),
       headers: {
         'Content-Type': 'application/json',
       },
@@ -58,7 +59,7 @@ Future<void> login() async {
       pref.setString('userToken', responseBody['token']);
       int? userId = responseBody['user']['id'];
       pref.setInt('userId', userId!);
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const HomeScreen()),);
+      Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen()),);
       print('Login successful');
     } else {
       // Handle login error
@@ -83,7 +84,7 @@ Future<void> createUser() async {
     String password = _passwordController.text;
     final pref = await SharedPreferences.getInstance();
     final response = await http.post(
-      Uri.parse('$apiUrl/login/create_user'),
+      Uri.parse('$apiUrl/api/login/create_user'),
       headers: {
         'Content-Type': 'application/json',
       },
@@ -98,7 +99,7 @@ Future<void> createUser() async {
       pref.setString('userToken', responseBody['token']);
       int? userId = responseBody['user']['id'];
       pref.setInt('userId', userId!);
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const HomeScreen()),);
+      Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen()),);
       print('Create account successful');
     } else {
       // Handle login error
@@ -125,7 +126,7 @@ static Future<void> logout(BuildContext context) async {
     }
   try {
     final response = await http.post(
-      Uri.parse('$apiUrl/logout/'),
+      Uri.parse('$apiUrl/api/logout/'),
       headers: {
         'Content-Type': 'application/json',
         'Authenticate': "Token $token"
@@ -162,9 +163,10 @@ static Future<String> getTokenFromPref() async {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+    return CustomScaffold(
+      appBarTitle: '',
+      body: Center(
+        // padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[

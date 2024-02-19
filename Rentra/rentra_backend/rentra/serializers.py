@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Product, Category
+from .models import Product, Category, PriceType
 
 User = get_user_model()
 
@@ -31,15 +31,10 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = ['name', 'description', 'category_id', 'price_type', 'price', 'user_id', 'image']
 
-    # def create(self, validated_data):
-    #     # Read the image data from validated data
-    #     image_data = validated_data.pop('image', None)
-    #     # Call the superclass's create method
-    #     instance = super().create(validated_data)
-    #     # If image data is provided, save it as binary to the instance
-    #     if image_data:
-    #         instance.image = image_data
-    #         instance.save()
-    #     return instance
+class PriceTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PriceType
+        fields = ['name']
+
 
 

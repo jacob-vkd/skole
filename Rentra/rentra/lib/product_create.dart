@@ -7,6 +7,7 @@ import 'home.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:http_parser/http_parser.dart';
+import 'custom_scaffold.dart';
 
 class Product {
   String name;
@@ -38,7 +39,9 @@ class _RentOutPageState extends State<RentOutPage> {
   late Product _newProduct;
   File? _image;
   List<Map<String, dynamic>> _categories = [];
+  List<Map<String, dynamic>> _priceTypes = [];
   String _selectedCategory = '';
+  String _selectedpriceType = '';
 
   @override
   void initState() {
@@ -52,12 +55,13 @@ class _RentOutPageState extends State<RentOutPage> {
       userId: 0,
     );
     fetchCategories();
+    fetchPriceTypes();
   }
 
   Future<void> fetchCategories() async {
     try {
       final response =
-          await http.get(Uri.parse('$apiUrl/product/categories/'));
+          await http.get(Uri.parse('$apiUrl/api/product/categories/'));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData =
@@ -82,6 +86,30 @@ class _RentOutPageState extends State<RentOutPage> {
     }
   }
 
+Future<void> fetchPriceTypes() async {
+  try {
+    final response = await http.get(Uri.parse('$apiUrl/api/product/pricetype'));
+    print(apiUrl);
+    if (response.statusCode < 300) {
+      final List<dynamic> responseData = json.decode(response.body);
+      // Assuming responseData is a list of price types
+      List<Map<String, dynamic>> priceTypeList = [
+        for (var priceType in responseData)
+          {'id': priceType['id'], 'name': priceType['name'] as String}
+      ];
+      setState(() {
+        _priceTypes = priceTypeList;
+        _selectedpriceType = priceTypeList.isNotEmpty ? _priceTypes[0]['name'] : '';
+        _newProduct.priceType = _selectedpriceType;
+      });
+    } else {
+      print('Failed to load price types');
+    }
+  } catch (error) {
+    print('Error fetching price types: $error');
+  }
+}
+
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -96,10 +124,8 @@ class _RentOutPageState extends State<RentOutPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Rent Out'),
-      ),
+    return CustomScaffold(
+      appBarTitle: 'Rent Out An Item',
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -141,31 +167,31 @@ class _RentOutPageState extends State<RentOutPage> {
                   },
                   decoration: const InputDecoration(labelText: 'Category'),
                 ),
-                // DropdownButtonFormField<String>(
-                //   value: _selectedCategory,
-                //   items: _categories.map((category) {
-                //     return DropdownMenuItem<String>(
-                //       value: category['name'],
-                //       child: Text(category['name']),
-                //     );
-                //   }).toList(),
-                //   onChanged: (String? value) {
-                //     setState(() {
-                //       _selectedCategory = value ?? '';
-                //       _newProduct.category = _selectedCategory;
-                //     });
-                //   },
-                //   decoration: const InputDecoration(labelText: 'Category'),
-                // ),
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Price Type'),
-                onChanged: (value) {
-                  setState(() {
-                    _newProduct.priceType = value;
-                  });
-                },
-                // Add any validation you need
-              ),
+                DropdownButtonFormField<String>(
+                  value: _selectedpriceType,
+                  items: _priceTypes.map((priceType) {
+                    return DropdownMenuItem<String>(
+                      value: priceType['name'],
+                      child: Text(priceType['name']),
+                    );
+                  }).toList(),
+                  onChanged: (String? value) {
+                    setState(() {
+                      _selectedpriceType = value ?? '';
+                      _newProduct.priceType = _selectedpriceType;
+                    });
+                  },
+                  decoration: const InputDecoration(labelText: 'Price Type'),
+                ),
+              // TextFormField(
+              //   decoration: const InputDecoration(labelText: 'Price Type'),
+              //   onChanged: (value) {
+              //     setState(() {
+              //       _newProduct.priceType = value;
+              //     });
+              //   },
+              //   // Add any validation you need
+              // ),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Price'),
                 onChanged: (value) {
@@ -176,15 +202,15 @@ class _RentOutPageState extends State<RentOutPage> {
                 // Add any validation you need
               ),
               _image == null
-                  ? Text('No image selected.')
+                  ? const Text('No image selected.')
                   : Image.file(
                       _image!,
                       height: 200.0,
                     ),
-              SizedBox(height: 20.0),
+              const SizedBox(height: 20.0),
               ElevatedButton(
                 onPressed: _pickImage,
-                child: Text('Pick Image'),
+                child: const Text('Pick Image'),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -221,7 +247,7 @@ Future<void> _submitProduct() async {
     // Create a multipart request
     var request = http.MultipartRequest(
       'POST',
-      Uri.parse('$apiUrl/product/create/'),
+      Uri.parse('$apiUrl/api/product/create/'),
     );
 
     // Set headers
@@ -265,7 +291,7 @@ Future<void> _submitProduct() async {
       );
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(builder: (context) => HomeScreen()),
       );
     } else {
       // Handle product creation error
@@ -289,10 +315,10 @@ Future<int> getCatId(String catString) async {
   }
 
   final response = await http.post(
-    Uri.parse('$apiUrl/product/categories/'),
+    Uri.parse('$apiUrl/api/product/categories/'),
     headers: {
       'Content-Type': 'application/json',
-      'Authenticate': 'Token ${token}',
+      'Authenticate': 'Token $token',
     },
     body: json.encode({
       'name': catString,

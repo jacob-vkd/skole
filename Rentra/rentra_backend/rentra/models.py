@@ -27,7 +27,7 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=6, decimal_places=1)
     image = models.ImageField(null=True, upload_to='images')
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, default=None, null=True)
-
+    rented_by_user_id = models.ForeignKey(User, on_delete=models.SET_NULL, default=None, null=True, related_name='rented_products')
 
 class PriceType(models.Model):
     name = models.CharField(max_length=255)

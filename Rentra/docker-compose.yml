@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  api:
+    build: rentra_backend
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+
+  rentra_frontend:
+    build: rentra
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+  # nginx:
+  #   build: nginx-stream
+  #   ports:
+  #       - "80:80"
+  #       # Forwarding game ports should not be required when we are done.
+  #       # - "27020:27020"
+  #       # - "42420:42420"
+  #   volumes:
+  #       # - ./nginx/conf/http:/opt/nginx/http.conf.d
+  #       - ./nginx/conf/stream:/opt/nginx/stream.conf.d
