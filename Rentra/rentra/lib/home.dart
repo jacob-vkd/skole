@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'custom_scaffold.dart';
 import 'package:http/http.dart' as http;
 import 'main.dart';
+import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -22,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    Settings.init();
     fetchUserItemsRentedRenting();
   }
 
@@ -33,14 +36,18 @@ Widget build(BuildContext context) {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Text('Items Renting: $amountItemsRenting', style: TextStyle(fontSize: 18)),
-          SizedBox(height: 20),
-          Text('Items Listed: $amountItemsListed', style: TextStyle(fontSize: 18)),
-          SizedBox(height: 20),
-          Text('Items Rented: $amountItemsRented', style: TextStyle(fontSize: 18)),
+          GestureDetector(onTap: (){print('SHOW LIST OF ITEMS IM RENTING CURRENTLY');},
+          child: Text('Items Renting: $amountItemsRenting', style: const TextStyle(fontSize: 26))),
+          const SizedBox(height: 26),
+          GestureDetector(onTap: (){print('SHOW LIST OF ITEMS I HAVE FOR RENT');},
+          child: Text('Items Listed: $amountItemsListed', style: const TextStyle(fontSize: 26)),),
+          const SizedBox(height: 26),
+          GestureDetector(onTap: (){print('SHOW LIST OF ITEMS IM CURRENTLY RENTING TO OTHER PEOPLE');},
+          child: Text('Items Rented: $amountItemsRented', style: const TextStyle(fontSize: 26))),
           if (nextReturnDate != null) ...[
-            SizedBox(height: 20),
-            Text('Next Return Date: $nextReturnDate', style: TextStyle(fontSize: 18)),
+            const SizedBox(height: 26),
+            GestureDetector(onTap: (){print('SHOW NEXT RETURN ITEM');},
+            child: Text('Next Return Date: $nextReturnDate', style: const TextStyle(fontSize: 26))),
           ]
         ],
       ),
@@ -48,6 +55,7 @@ Widget build(BuildContext context) {
     drawer: CommonDrawer(),
   );
 }
+
 
   Future<void> fetchUserItemsRentedRenting() async {
     try {
@@ -60,11 +68,13 @@ Widget build(BuildContext context) {
       if (pref.containsKey('userId')) {
         userId = pref.getInt('userId')!;
       }
+      print('TOKEN');
+      print('Token $token');
       final response = await http.post(
-        Uri.parse('$apiUrl/api/product/user'),
+        Uri.parse('$apiUrl/api/product/user'), 
         headers: {
           'Content-Type': 'application/json',
-          'Authenticate': "Token $token"
+          'Authorization': 'Token $token'
         },
         body: json.encode({
           'user_id': userId,
@@ -74,8 +84,8 @@ Widget build(BuildContext context) {
         final Map<String, dynamic> responseBody = json.decode(response.body);
         print(responseBody);
         setState(() {
-          amountItemsRented = responseBody['products_renting'].length;
-          amountItemsRenting = responseBody['products_rented'].length;
+          amountItemsRented = responseBody['products_rented'].length;
+          amountItemsRenting = responseBody['products_renting'].length;
           amountItemsListed = responseBody['products'].length;
         });
       } else {

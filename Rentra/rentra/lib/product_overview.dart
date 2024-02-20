@@ -20,6 +20,7 @@ class _ProductListState extends State<ProductList> {
   // Function to fetch products from the Django API
   Future<void> fetchProducts() async {
     var token = await LoginPageState.getTokenFromPref();
+    print('TOKEN**********: $token');
     try {
       final response = await http.get(
       Uri.parse('$apiUrl/api/product/'),

@@ -1,6 +1,6 @@
 from rest_framework import generics, status
 from rest_framework.parsers import MultiPartParser
-from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -26,17 +26,15 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_object(self):
         return self.request.user
 
-@authentication_classes([SessionAuthentication, TokenAuthentication])
+
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 class ProductCreateView(APIView):
     parser_classes = [MultiPartParser]  # Use MultiPartParser to handle multipart/form-data requests
     
     def post(self, request, format=None):
         serializer = ProductSerializer(data=request.data)
         if serializer.is_valid():
-            # If an image is included in the request, save its binary data
-            # image_data = request.data.get('image')
-            # if image_data:
-            #     serializer.validated_data['image'] = image_data.read()  # Read image data as binary
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
@@ -49,7 +47,10 @@ def product(request):
     return Response(serializer.data)
 
 @api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def product_user(request):
+    print(request.META)
     # Filter products where user_id matches request.user_id
     products = Product.objects.filter(user_id=request.data['user_id'])
     products_renting = Product.objects.filter(rented_by_user_id=request.data['user_id'])
@@ -78,7 +79,6 @@ def create_user(request):
 
 @api_view(['POST'])
 def user_login(request):
-    print('TRYING TO LOG IN***********************')
     try:
         user = get_object_or_404(User, username=request.data['username'])
     except Exception as e:
@@ -108,4 +108,5 @@ def categories(request):
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated]) 
 def test_token(request):
+    print('TEST TOKEN')
     return Response({'message': f"Token test successful"})

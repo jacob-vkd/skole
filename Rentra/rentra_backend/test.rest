@@ -22,10 +22,17 @@ Content-Type: application/json
 { "username": "jo3", "password": "h", "email": "adam@mail.com" }
 
 ###
+
 ###
 
-GET http://127.0.0.1:8000/api/login/test_token/
+POST http://127.0.0.1:8000/api/product/user
 Content-Type: application/json
-Authorization: Token 6f5552f7b7e20cd53caa69e62c0a3826b9d1a8a0
+Authorization: Token 17a06b323eb40a270599e221522da3dbfa1d7ee4
+
+{ "user_id": 2}
+
 
 ###
+GET http://127.0.0.1:8000/api/login/test_token
+Content-Type: application/json
+Authorization: Token 52c97f43b0d0082972765929f4a87f6679dda4f9
