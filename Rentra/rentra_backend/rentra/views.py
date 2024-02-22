@@ -26,25 +26,24 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_object(self):
         return self.request.user
 
-
+@api_view(['POST'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
-class ProductCreateView(APIView):
+def ProductCreateView(request):
     parser_classes = [MultiPartParser]  # Use MultiPartParser to handle multipart/form-data requests
-    
-    def post(self, request, format=None):
-        serializer = ProductSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer = ProductSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 @api_view(['GET'])
 def product(request):
     products = Product.objects.all()
     serializer = ProductSerializer(products, many=True)
     return Response(serializer.data)
+
 
 @api_view(['POST'])
 @authentication_classes([TokenAuthentication])

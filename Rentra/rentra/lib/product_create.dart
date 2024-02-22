@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:http_parser/http_parser.dart';
 import 'custom_scaffold.dart';
+import 'theme_notifier.dart';
 
 class Product {
   String name;
@@ -28,7 +29,8 @@ class Product {
 }
 
 class RentOutPage extends StatefulWidget {
-  const RentOutPage({super.key});
+  final ThemeNotifier themeNotifier;
+  const RentOutPage({Key? key, required this.themeNotifier}) : super(key: key);
 
   @override
   _RentOutPageState createState() => _RentOutPageState();
@@ -64,8 +66,7 @@ class _RentOutPageState extends State<RentOutPage> {
           await http.get(Uri.parse('$apiUrl/api/product/categories/'));
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData =
-            json.decode(response.body);
+        final Map<String, dynamic> responseData = json.decode(response.body);
         final List<dynamic> categoryData = responseData['categories'];
 
         List<Map<String, dynamic>> categoryList = [
@@ -86,29 +87,31 @@ class _RentOutPageState extends State<RentOutPage> {
     }
   }
 
-Future<void> fetchPriceTypes() async {
-  try {
-    final response = await http.get(Uri.parse('$apiUrl/api/product/pricetype'));
-    print(apiUrl);
-    if (response.statusCode < 300) {
-      final List<dynamic> responseData = json.decode(response.body);
-      // Assuming responseData is a list of price types
-      List<Map<String, dynamic>> priceTypeList = [
-        for (var priceType in responseData)
-          {'id': priceType['id'], 'name': priceType['name'] as String}
-      ];
-      setState(() {
-        _priceTypes = priceTypeList;
-        _selectedpriceType = priceTypeList.isNotEmpty ? _priceTypes[0]['name'] : '';
-        _newProduct.priceType = _selectedpriceType;
-      });
-    } else {
-      print('Failed to load price types');
+  Future<void> fetchPriceTypes() async {
+    try {
+      final response =
+          await http.get(Uri.parse('$apiUrl/api/product/pricetype'));
+      print(apiUrl);
+      if (response.statusCode < 300) {
+        final List<dynamic> responseData = json.decode(response.body);
+        // Assuming responseData is a list of price types
+        List<Map<String, dynamic>> priceTypeList = [
+          for (var priceType in responseData)
+            {'id': priceType['id'], 'name': priceType['name'] as String}
+        ];
+        setState(() {
+          _priceTypes = priceTypeList;
+          _selectedpriceType =
+              priceTypeList.isNotEmpty ? _priceTypes[0]['name'] : '';
+          _newProduct.priceType = _selectedpriceType;
+        });
+      } else {
+        print('Failed to load price types');
+      }
+    } catch (error) {
+      print('Error fetching price types: $error');
     }
-  } catch (error) {
-    print('Error fetching price types: $error');
   }
-}
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -120,7 +123,6 @@ Future<void> fetchPriceTypes() async {
       });
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -151,38 +153,38 @@ Future<void> fetchPriceTypes() async {
                 },
                 // Add any validation you need
               ),
-                DropdownButtonFormField<String>(
-                  value: _selectedCategory,
-                  items: _categories.map((category) {
-                    return DropdownMenuItem<String>(
-                      value: category['name'],
-                      child: Text(category['name']),
-                    );
-                  }).toList(),
-                  onChanged: (String? value) {
-                    setState(() {
-                      _selectedCategory = value ?? '';
-                      _newProduct.category = _selectedCategory;
-                    });
-                  },
-                  decoration: const InputDecoration(labelText: 'Category'),
-                ),
-                DropdownButtonFormField<String>(
-                  value: _selectedpriceType,
-                  items: _priceTypes.map((priceType) {
-                    return DropdownMenuItem<String>(
-                      value: priceType['name'],
-                      child: Text(priceType['name']),
-                    );
-                  }).toList(),
-                  onChanged: (String? value) {
-                    setState(() {
-                      _selectedpriceType = value ?? '';
-                      _newProduct.priceType = _selectedpriceType;
-                    });
-                  },
-                  decoration: const InputDecoration(labelText: 'Price Type'),
-                ),
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                items: _categories.map((category) {
+                  return DropdownMenuItem<String>(
+                    value: category['name'],
+                    child: Text(category['name']),
+                  );
+                }).toList(),
+                onChanged: (String? value) {
+                  setState(() {
+                    _selectedCategory = value ?? '';
+                    _newProduct.category = _selectedCategory;
+                  });
+                },
+                decoration: const InputDecoration(labelText: 'Category'),
+              ),
+              DropdownButtonFormField<String>(
+                value: _selectedpriceType,
+                items: _priceTypes.map((priceType) {
+                  return DropdownMenuItem<String>(
+                    value: priceType['name'],
+                    child: Text(priceType['name']),
+                  );
+                }).toList(),
+                onChanged: (String? value) {
+                  setState(() {
+                    _selectedpriceType = value ?? '';
+                    _newProduct.priceType = _selectedpriceType;
+                  });
+                },
+                decoration: const InputDecoration(labelText: 'Price Type'),
+              ),
               // TextFormField(
               //   decoration: const InputDecoration(labelText: 'Price Type'),
               //   onChanged: (value) {
@@ -212,6 +214,7 @@ Future<void> fetchPriceTypes() async {
                 onPressed: _pickImage,
                 child: const Text('Pick Image'),
               ),
+              const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
@@ -228,103 +231,105 @@ Future<void> fetchPriceTypes() async {
     );
   }
 
-Future<void> _submitProduct() async {
-  final prefs = await SharedPreferences.getInstance();
-  String? token;
-  int? userId;
-  if (prefs.containsKey('userToken')) {
-    token = prefs.getString('userToken')!;
-  } else {
-    throw Exception('User is not authenticated');
-  }
-  if (prefs.containsKey('userId')) {
-    userId = prefs.getInt('userId')!;
-  }
-  try {
-    // Handle submitting the product data.
-    final categoryId = await getCatId(_newProduct.category);
-
-    // Create a multipart request
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse('$apiUrl/api/product/create/'),
-    );
-
-    // Set headers
-    request.headers['Authenticate'] = 'Token $token';
-
-    // Create a map for fields
-    var fieldsMap = {
-      'name': _newProduct.name,
-      'description': _newProduct.description,
-      'category_id': categoryId.toString(), // Convert to String
-      'price_type': _newProduct.priceType,
-      'price': _newProduct.price.toString(), // Convert to String
-      'user_id': userId.toString(), // Convert to String
-    };
-    var stringFieldsMap = Map<String, String>.from(fieldsMap);
-
-    // Add fields to the request
-    request.fields.addAll(stringFieldsMap);
-
-    // Add the image file to the request
-    if (_image != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'image',
-          _image!.path,
-          contentType: MediaType('image', 'png'), // Adjust the content type as needed
-        ),
-      );
-    }
-
-    // Send the request
-    var response = await request.send();
-
-    // Check the response status
-    if (response.statusCode < 300) {
-      // Successfully uploaded
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Your item has been listed'),
-        ),
-      );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
+  Future<void> _submitProduct() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? token;
+    int? userId;
+    if (prefs.containsKey('userToken')) {
+      token = prefs.getString('userToken')!;
     } else {
-      // Handle product creation error
-      print('Create product failed with code: ${response.statusCode}');
+      throw Exception('User is not authenticated');
     }
-  } catch (error) {
-    // Handle exceptions
-    print('Error during product submission: $error');
+    if (prefs.containsKey('userId')) {
+      userId = prefs.getInt('userId')!;
+    }
+    try {
+      // Handle submitting the product data.
+      final categoryId = await getCatId(_newProduct.category);
+
+      // Create a multipart request
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$apiUrl/api/product/create/'),
+      );
+
+      // Set headers
+      request.headers['Authenticate'] = 'Token $token';
+
+      // Create a map for fields
+      var fieldsMap = {
+        'name': _newProduct.name,
+        'description': _newProduct.description,
+        'category_id': categoryId.toString(), // Convert to String
+        'price_type': _newProduct.priceType,
+        'price': _newProduct.price.toString(), // Convert to String
+        'user_id': userId.toString(), // Convert to String
+      };
+      var stringFieldsMap = Map<String, String>.from(fieldsMap);
+
+      // Add fields to the request
+      request.fields.addAll(stringFieldsMap);
+
+      // Add the image file to the request
+      if (_image != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'image',
+            _image!.path,
+            contentType:
+                MediaType('image', 'png'), // Adjust the content type as needed
+          ),
+        );
+      }
+
+      // Send the request
+      var response = await request.send();
+
+      // Check the response status
+      if (response.statusCode < 300) {
+        // Successfully uploaded
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Your item has been listed'),
+          ),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => HomeScreen(
+                    themeNotifier: widget.themeNotifier,
+                  )),
+        );
+      } else {
+        // Handle product creation error
+        print('Create product failed with code: ${response.statusCode}');
+      }
+    } catch (error) {
+      // Handle exceptions
+      print('Error during product submission: $error');
+    }
   }
-}
 
+  Future<int> getCatId(String catString) async {
+    final prefs = await SharedPreferences.getInstance();
+    String? token;
+    if (prefs.containsKey('userToken')) {
+      token = prefs.getString('userToken')!;
+    } else {
+      throw Exception('User is not authenticated');
+    }
 
-
-Future<int> getCatId(String catString) async {
-  final prefs = await SharedPreferences.getInstance();
-  String? token;
-  if (prefs.containsKey('userToken')) {
-    token = prefs.getString('userToken')!;
-  } else {
-    throw Exception('User is not authenticated');
+    final response = await http.post(
+      Uri.parse('$apiUrl/api/product/categories/'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authenticate': 'Token $token',
+      },
+      body: json.encode({
+        'name': catString,
+      }),
+    );
+    final Map<String, dynamic> responseBody = json.decode(response.body);
+    return responseBody['category_id'];
   }
-
-  final response = await http.post(
-    Uri.parse('$apiUrl/api/product/categories/'),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authenticate': 'Token $token',
-    },
-    body: json.encode({
-      'name': catString,
-    }),
-  );
-  final Map<String, dynamic> responseBody = json.decode(response.body);
-  return responseBody['category_id'];
-}
 }

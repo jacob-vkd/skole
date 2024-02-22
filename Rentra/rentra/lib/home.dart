@@ -6,10 +6,11 @@ import 'custom_scaffold.dart';
 import 'package:http/http.dart' as http;
 import 'main.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
-
+import 'theme_notifier.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  final ThemeNotifier themeNotifier;
+  const HomeScreen({Key? key, required this.themeNotifier}) : super(key: key);
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -28,39 +29,58 @@ class _HomeScreenState extends State<HomeScreen> {
     fetchUserItemsRentedRenting();
   }
 
-@override
-Widget build(BuildContext context) {
-  return CustomScaffold(
-    appBarTitle: 'Rentra',
-    body: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          GestureDetector(onTap: (){print('SHOW LIST OF ITEMS IM RENTING CURRENTLY');},
-          child: Text('Items Renting: $amountItemsRenting', style: const TextStyle(fontSize: 26))),
-          const SizedBox(height: 26),
-          GestureDetector(onTap: (){print('SHOW LIST OF ITEMS I HAVE FOR RENT');},
-          child: Text('Items Listed: $amountItemsListed', style: const TextStyle(fontSize: 26)),),
-          const SizedBox(height: 26),
-          GestureDetector(onTap: (){print('SHOW LIST OF ITEMS IM CURRENTLY RENTING TO OTHER PEOPLE');},
-          child: Text('Items Rented: $amountItemsRented', style: const TextStyle(fontSize: 26))),
-          if (nextReturnDate != null) ...[
+  @override
+  Widget build(BuildContext context) {
+    return CustomScaffold(
+      appBarTitle: 'Rentra',
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            GestureDetector(
+                onTap: () {
+                  print('SHOW LIST OF ITEMS IM RENTING CURRENTLY');
+                },
+                child: Text('Items Renting: $amountItemsRenting',
+                    style: const TextStyle(fontSize: 26))),
             const SizedBox(height: 26),
-            GestureDetector(onTap: (){print('SHOW NEXT RETURN ITEM');},
-            child: Text('Next Return Date: $nextReturnDate', style: const TextStyle(fontSize: 26))),
-          ]
-        ],
+            GestureDetector(
+              onTap: () {
+                print('SHOW LIST OF ITEMS I HAVE FOR RENT');
+              },
+              child: Text('Items Listed: $amountItemsListed',
+                  style: const TextStyle(fontSize: 26)),
+            ),
+            const SizedBox(height: 26),
+            GestureDetector(
+                onTap: () {
+                  print(
+                      'SHOW LIST OF ITEMS IM CURRENTLY RENTING TO OTHER PEOPLE');
+                },
+                child: Text('Items Rented: $amountItemsRented',
+                    style: const TextStyle(fontSize: 26))),
+            if (nextReturnDate != null) ...[
+              const SizedBox(height: 26),
+              GestureDetector(
+                  onTap: () {
+                    print('SHOW NEXT RETURN ITEM');
+                  },
+                  child: Text('Next Return Date: $nextReturnDate',
+                      style: const TextStyle(fontSize: 26))),
+            ]
+          ],
+        ),
       ),
-    ),
-    drawer: CommonDrawer(),
-  );
-}
-
+      drawer: CommonDrawer(
+        themeNotifier: widget.themeNotifier,
+      ),
+    );
+  }
 
   Future<void> fetchUserItemsRentedRenting() async {
     try {
       final pref = await SharedPreferences.getInstance();
-      String? token ='';
+      String? token = '';
       int? userId = 0;
       if (pref.containsKey('userToken')) {
         token = pref.getString('userToken')!;
@@ -71,7 +91,7 @@ Widget build(BuildContext context) {
       print('TOKEN');
       print('Token $token');
       final response = await http.post(
-        Uri.parse('$apiUrl/api/product/user'), 
+        Uri.parse('$apiUrl/api/product/user'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Token $token'

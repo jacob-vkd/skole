@@ -4,38 +4,54 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home.dart';
 import 'custom_scaffold.dart';
-import 'settings.dart';
+import 'theme_notifier.dart';
 
 const String apiUrl = 'http://127.0.0.1:8000';
 dynamic globaluser;
 
 void main() => runApp(MyApp());
 
-class MyApp extends StatelessWidget {
-  MyApp({Key? key}) : super(key: key);
-  
-  static bool darkmode = false;
-  final ThemeMode _themeMode = ThemeMode.system;
+class MyApp extends StatefulWidget {
+  const MyApp({Key? key}) : super(key: key);
 
-  
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late ThemeNotifier _themeNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _themeNotifier = ThemeNotifier(ThemeMode.light);
+    _loadThemeMode();
+  }
+
+  Future<void> _loadThemeMode() async {
+    _themeNotifier.setThemeMode(await _themeNotifier.loadThemeMode());
+  }
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData rentraTheme = darkmode ? ThemeData.dark() : ThemeData.light();
-
-    return MaterialApp(
-      title: 'Login Page',
-      theme: ThemeData(),
-      darkTheme: ThemeData.dark(),
-      themeMode: _themeMode,
-      home: const LoginPage(),
+    return ValueListenableBuilder(
+      valueListenable: _themeNotifier,
+      builder: (context, ThemeMode themeMode, child) {
+        return MaterialApp(
+          title: 'Flutter Demo',
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode: themeMode,
+          home: LoginPage(themeNotifier: _themeNotifier),
+        );
+      },
     );
   }
 }
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
-
+  final ThemeNotifier themeNotifier;
+  const LoginPage({Key? key, required this.themeNotifier}) : super(key: key);
 
   @override
   LoginPageState createState() => LoginPageState();
@@ -44,14 +60,6 @@ class LoginPage extends StatefulWidget {
 class LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  ThemeMode _themeMode = ThemeMode.system;
-
-  void toggleTheme(ThemeMode themeMode) {
-    setState(() {
-      _themeMode = themeMode;
-    });
-  }
-  
 
   Future<void> login() async {
     try {
@@ -75,7 +83,13 @@ class LoginPageState extends State<LoginPage> {
         prefs.setString('userToken', responseBody['token']);
         int? userId = responseBody['user']['id'];
         prefs.setInt('userId', userId!);
-        Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen()),);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => HomeScreen(
+                    themeNotifier: widget.themeNotifier,
+                  )),
+        );
         print('Login successful');
       } else {
         // Handle login error
@@ -83,9 +97,9 @@ class LoginPageState extends State<LoginPage> {
         // Access the 'message' key
         final errorMessage = responseBody['message'];
         ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-        content: Text(errorMessage),
-        ),
+          SnackBar(
+            content: Text(errorMessage),
+          ),
         );
       }
     } catch (error) {
@@ -115,7 +129,13 @@ class LoginPageState extends State<LoginPage> {
         pref.setString('userToken', responseBody['token']);
         int? userId = responseBody['user']['id'];
         pref.setInt('userId', userId!);
-        Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen()),);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => HomeScreen(
+                    themeNotifier: widget.themeNotifier,
+                  )),
+        );
         print('Create account successful');
       } else {
         // Handle login error
@@ -123,9 +143,9 @@ class LoginPageState extends State<LoginPage> {
         // Access the 'message' key
         final errorMessage = responseBody['message'];
         ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-        content: Text(errorMessage.toString()),
-        ),
+          SnackBar(
+            content: Text(errorMessage.toString()),
+          ),
         );
       }
     } catch (error) {
@@ -134,47 +154,49 @@ class LoginPageState extends State<LoginPage> {
     }
   }
 
-static Future<void> logout(BuildContext context) async {
-  final pref = await SharedPreferences.getInstance();
-  String? token ='';
-  if (pref.containsKey('userToken')) {
+  static Future<void> logout(BuildContext context) async {
+    final pref = await SharedPreferences.getInstance();
+    String? token = '';
+    if (pref.containsKey('userToken')) {
       token = pref.getString('userToken')!;
     }
-  try {
-    final response = await http.post(
-      Uri.parse('$apiUrl/api/logout/'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authenticate': "Token $token"
-      },
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('$apiUrl/api/logout/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authenticate': "Token $token"
+        },
+      );
 
-    if (response.statusCode == 200) {
-      // Handle successful logout response
-      print('Logout successful');
+      if (response.statusCode == 200) {
+        // Handle successful logout response
+        print('Logout successful');
 
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MyApp()),);
-    } else {
-      // Handle logout error
-      print('Logout failed with status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MyApp()),
+        );
+      } else {
+        // Handle logout error
+        print('Logout failed with status: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+    } catch (error) {
+      // Handle exceptions
+      print('Error during logout: $error');
     }
-  } catch (error) {
-    // Handle exceptions
-    print('Error during logout: $error');
   }
-}
 
-static Future<String> getTokenFromPref() async {
-  final prefs = await SharedPreferences.getInstance();
-  String token = '';
-  if (prefs.containsKey('userToken')) {
-    token = prefs.getString('userToken')!;
-    } 
-  else {
-    throw Exception('User is not authenticated');
+  static Future<String> getTokenFromPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    String token = '';
+    if (prefs.containsKey('userToken')) {
+      token = prefs.getString('userToken')!;
+    } else {
+      throw Exception('User is not authenticated');
     }
-  return token;
+    return token;
   }
 
   @override

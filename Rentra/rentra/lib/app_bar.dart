@@ -3,12 +3,17 @@ import 'main.dart';
 import 'settings.dart';
 import 'product_create.dart';
 import 'product_overview.dart';
+import 'theme_notifier.dart';
 
 class RentraAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  static const Color backgroundColor = Color.fromARGB(255, 120, 201, 62);
+  final ThemeNotifier themeNotifier; // Add themeNotifier field
 
-  const RentraAppBar({super.key, required this.title});
+  const RentraAppBar(
+      {Key? key, required this.title, required this.themeNotifier})
+      : super(key: key);
+
+  static const Color backgroundColor = Color.fromARGB(255, 120, 201, 62);
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -18,7 +23,8 @@ class RentraAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       title: Text(title),
       centerTitle: true,
-      backgroundColor: Colors.blue,
+      backgroundColor:
+          themeNotifier.value == ThemeMode.dark ? Colors.blue : Colors.white,
       leading: Builder(
         builder: (BuildContext context) {
           return IconButton(
@@ -34,7 +40,8 @@ class RentraAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 class CommonDrawer extends StatelessWidget {
-  const CommonDrawer({super.key});
+  final ThemeNotifier themeNotifier;
+  const CommonDrawer({Key? key, required this.themeNotifier}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -42,52 +49,55 @@ class CommonDrawer extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-            ListTile(
-              title: const Text('Rent an Item'),
-              onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ProductList()),
-                  );
-              },
-            ), 
-            ListTile(
-              title: const Text('Rent Out an Item'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
+          ListTile(
+            title: const Text('Rent an Item'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const RentOutPage()),
+                MaterialPageRoute(builder: (context) => const ProductList()),
               );
-              },
-            ),
-            ListTile(
-              title: const Text('My Profile'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
-              );
-              },
+            },
           ),
-            ListTile(
-              title: const Text('Logout'),
-              onTap: () async {
-                await LoginPageState.logout(context);
-                Navigator.pop(context);
-              },
-            ),
+          ListTile(
+            title: const Text('Rent Out an Item'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        RentOutPage(themeNotifier: themeNotifier)),
+              );
+            },
+          ),
+          ListTile(
+            title: const Text('My Profile'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          ListTile(
+            title: const Text('Settings'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        SettingsPage(themeNotifier: themeNotifier)),
+              );
+            },
+          ),
+          ListTile(
+            title: const Text('Logout'),
+            onTap: () async {
+              await LoginPageState.logout(context);
+              Navigator.pop(context);
+            },
+          ),
         ],
       ),
     );
   }
 }
-
