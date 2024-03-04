@@ -185,15 +185,6 @@ class _RentOutPageState extends State<RentOutPage> {
                 },
                 decoration: const InputDecoration(labelText: 'Price Type'),
               ),
-              // TextFormField(
-              //   decoration: const InputDecoration(labelText: 'Price Type'),
-              //   onChanged: (value) {
-              //     setState(() {
-              //       _newProduct.priceType = value;
-              //     });
-              //   },
-              //   // Add any validation you need
-              // ),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Price'),
                 onChanged: (value) {
@@ -230,6 +221,7 @@ class _RentOutPageState extends State<RentOutPage> {
       ),
     );
   }
+  
 
   Future<void> _submitProduct() async {
     final prefs = await SharedPreferences.getInstance();
@@ -254,7 +246,8 @@ class _RentOutPageState extends State<RentOutPage> {
       );
 
       // Set headers
-      request.headers['Authenticate'] = 'Token $token';
+      request.headers['Content-Type'] = 'application/json';
+      request.headers['Authorization'] = 'Token $token';
 
       // Create a map for fields
       var fieldsMap = {

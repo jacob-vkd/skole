@@ -1,18 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-class Renting(models.Model):
-    name = models.CharField(max_length=255)
-    product_id = models.ForeignKey('Product', on_delete=models.SET_NULL, null=True)
-    owner = models.ForeignKey('auth.User', on_delete=models.SET_NULL, related_name='owned_rentings', null=True)
-    renter = models.ForeignKey('auth.User', on_delete=models.SET_NULL, related_name='rented_rentings', null=True)
-    terms = models.TextField(null=True)
-    date_from = models.DateField()
-    date_to = models.DateField()
-    amount_total = models.DecimalField(max_digits=6, decimal_places=1)
-
 class Category(models.Model):
     name = models.CharField(max_length=255)
+    
     class Meta:
         verbose_name_plural = "Categories"
 

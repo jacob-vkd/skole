@@ -35,4 +35,4 @@ Authorization: Token 17a06b323eb40a270599e221522da3dbfa1d7ee4
 ###
 GET http://127.0.0.1:8000/api/login/test_token
 Content-Type: application/json
-Authorization: Token 52c97f43b0d0082972765929f4a87f6679dda4f9
+Authorization: Token 17a06b323eb40a270599e221522da3dbfa1d7ee4

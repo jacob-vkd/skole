@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rentra/home.dart';
 import 'main.dart';
 import 'settings.dart';
 import 'product_create.dart';
@@ -50,12 +51,20 @@ class CommonDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: <Widget>[
           ListTile(
-            title: const Text('Rent an Item'),
+            title: const Text('Home'),
             onTap: () {
-              Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ProductList()),
+                MaterialPageRoute(builder: (context) => HomeScreen(themeNotifier: themeNotifier,)),
+              );
+            },
+          ),
+          ListTile(
+            title: const Text('Rent an Item'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProductList(themeNotifier: themeNotifier,)),
               );
             },
           ),
@@ -65,9 +74,7 @@ class CommonDrawer extends StatelessWidget {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (context) =>
-                        RentOutPage(themeNotifier: themeNotifier)),
+                MaterialPageRoute(builder: (context) => RentOutPage(themeNotifier: themeNotifier)),
               );
             },
           ),
@@ -91,9 +98,8 @@ class CommonDrawer extends StatelessWidget {
           ),
           ListTile(
             title: const Text('Logout'),
-            onTap: () async {
-              await LoginPageState.logout(context);
-              Navigator.pop(context);
+            onTap: () {
+              LoginPageState.logout(context);
             },
           ),
         ],

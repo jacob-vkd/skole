@@ -42,6 +42,8 @@ def ProductCreateView(request):
 def product(request):
     products = Product.objects.all()
     serializer = ProductSerializer(products, many=True)
+    print('**************')
+    print(serializer.data)
     return Response(serializer.data)
 
 
@@ -101,7 +103,8 @@ def categories(request):
         return JsonResponse({'categories': category_list})
     if request.method == 'POST':
         category = Category.objects.get(name=request.data['name'])
-        return Response({'category_id': category.id})
+        print(category)
+        return Response({'category_id': category})
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])

@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'main.dart';
 import 'custom_scaffold.dart';
-import 'product_overview.dart';
+import 'product.dart';
 
 class MyProductList extends StatefulWidget {
   const MyProductList({super.key});
@@ -17,7 +17,7 @@ class _MyProductListState extends State<MyProductList> {
   List<Product> products = [];
 
   // Function to fetch products from the Django API
-  Future<void> fetchProducts() async {
+  Future<void> fetchMyProducts() async {
     var token = await LoginPageState.getTokenFromPref();
     try {
       final response = await http.get(Uri.parse('$apiUrl/api/product/'),
@@ -57,7 +57,7 @@ class _MyProductListState extends State<MyProductList> {
   void initState() {
     super.initState();
     // Fetch products when the widget is initialized
-    fetchProducts();
+    fetchMyProducts();
   }
 
   @override

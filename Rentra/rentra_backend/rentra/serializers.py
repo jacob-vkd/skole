@@ -25,8 +25,16 @@ class RegistrationSerializer(serializers.ModelSerializer):
         return user
 
 
+
 class ProductSerializer(serializers.ModelSerializer):
-    category_id = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
+
+    class ProductCategorySerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Category
+            fields = ['name']
+
+    category_id = ProductCategorySerializer(many=False)
+
     class Meta:
         model = Product
         fields = ['name', 'description', 'category_id', 'price_type', 'price', 'user_id', 'image']
@@ -37,4 +45,8 @@ class PriceTypeSerializer(serializers.ModelSerializer):
         fields = ['name']
 
 
-
+class CategorySerializer(serializers.ModelSerializer):
+    product_set = ProductSerializer(many=True)
+    class Meta:
+        model = Category
+        fields = ['name', 'product_set']
